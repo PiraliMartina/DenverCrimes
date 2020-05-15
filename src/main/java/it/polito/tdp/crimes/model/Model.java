@@ -2,7 +2,9 @@ package it.polito.tdp.crimes.model;
 
 import java.time.Month;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
@@ -15,6 +17,7 @@ public class Model {
 
 	private EventsDao dao;
 	private Graph<String, DefaultWeightedEdge> grafo;
+	private List<String> best;
 
 	public Model() {
 		dao = new EventsDao();
@@ -83,6 +86,49 @@ public class Model {
 		for (DefaultWeightedEdge d : grafo.edgeSet()) {
 			if (grafo.getEdgeWeight(d) >= media)
 				s += d.toString() + " " + grafo.getEdgeWeight(d) + " \n";
+		}
+		return s;
+	}
+	
+	public Set<DefaultWeightedEdge> getEdges(){
+		return grafo.edgeSet();
+	}
+	
+	public List<String> calcolaPercorso(DefaultWeightedEdge e){
+		best = new LinkedList<String>();
+		String partenza = grafo.getEdgeSource(e);
+		String arrivo = grafo.getEdgeTarget(e);
+		List<String> parziale = new LinkedList<String>();
+		parziale.add(partenza);
+		ricorsiva(arrivo, parziale);
+		
+		return best;
+	}
+
+	private void ricorsiva(String arrivo, List<String> parziale) {
+		//condizione di teminazione
+		if(parziale.get(parziale.size()-1).equals(arrivo)) {
+			if(parziale.size()>best.size())
+				best = new LinkedList<String>(parziale);
+		}
+		
+		for(String s: Graphs.neighborListOf(grafo, parziale.get(parziale.size()-1))) {
+			if(!parziale.contains(s)) {
+				parziale.add(s);
+				ricorsiva(arrivo, parziale);
+				parziale.remove(s);
+			}
+		}
+		
+	}
+	
+	public String formatta() {
+		String s="";
+		s+=String.format("Il tuo grafo ha %d vertici e %d archi \n", numVertex(), numEdges());
+		int i=1;
+		for(String s1: best) {
+			s+=i+" - "+s1+"\n";
+			i++;
 		}
 		return s;
 	}
